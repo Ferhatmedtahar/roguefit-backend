@@ -12,6 +12,21 @@ const productSchema = new mongoose.Schema(
     },
     category: {
       type: String,
+      enum: {
+        values: [
+          "Protien Powders",
+          "Healthy Fats",
+          "Fat Burners",
+          "Amino Acids",
+          "Creatine",
+          "Vitamins and Minerals",
+          "Other Supplements",
+          "Fitness Food",
+          "Sportswear",
+          "Workout Accessories",
+        ],
+        message: "only this categories are available",
+      },
       required: [true, "product must have a category"],
     },
     description: {
@@ -64,11 +79,12 @@ const productSchema = new mongoose.Schema(
   },
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
+
 // ! indexes
 productSchema.index({ isAvailable: 1 });
 productSchema.index({ price: 1 });
 
-//*  pre, post :Document and Query middlewares
+// £  pre, post :Document and Query middlewares
 
 // check the price and add slug field and fill the isAvailable field
 productSchema.pre("save", function (next) {
@@ -89,6 +105,14 @@ productSchema.pre("findOneAndUpdate", function (next) {
     // Set isAvailable based on the stock value
     update.isAvailable = update.stock > 0;
   }
+  next();
+});
+
+productSchema.pre(/^find/, function (next) {
+  // eslint-disable-next-line
+  const query = this as mongoose.Query<any, any>;
+
+  query.select("-__v -createdAt -updatedAt");
   next();
 });
 
