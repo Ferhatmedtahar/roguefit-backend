@@ -45,10 +45,11 @@ const productSchema = new mongoose.Schema(
       type: Number,
       required: [true, "a product must have a price"],
     },
-    /* eslint-disable object-shorthand */
     discount: {
       type: Number,
       default: 0,
+      min: 0,
+      max: 1,
     },
     stock: {
       type: Number,
