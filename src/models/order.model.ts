@@ -25,7 +25,7 @@ const orderSchema = new mongoose.Schema(
     },
     totalPrice: {
       type: Number,
-      // required: [true, "a order must have a total amount "],
+      // required: [true, "a order must have a total price "],
     },
     isPaid: {
       type: Boolean,
@@ -44,7 +44,7 @@ const orderSchema = new mongoose.Schema(
         },
       },
     ],
-    // !address stuff
+    // ! address stuff
 
     state: {
       type: String,
@@ -119,8 +119,6 @@ orderSchema.pre("save", async function (next) {
       : demand.product.price * demand.quantity
   );
   this.totalPrice = prices.reduce((acc, cur) => acc + cur, 0);
-
-  // next();
 });
 
 export const Order = mongoose.model("Order", orderSchema);
