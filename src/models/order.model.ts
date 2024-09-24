@@ -126,3 +126,11 @@ export const Order = mongoose.model("Order", orderSchema);
 // check if the stock are available to serve the order
 // get an array of prices after calculating the discount if exist
 // update the stock
+
+orderSchema.pre(/^find/, function (next) {
+  // eslint-disable-next-line
+  const query = this as mongoose.Query<any, any>;
+
+  query.select("-__v -createdAt -updatedAt");
+  next();
+});

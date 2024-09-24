@@ -15,6 +15,7 @@
     "sourceType": "module"
   },
   "rules": {
+    "object-shorthand": ["off", "always", { "avoidQuotes": true }],
     "prettier/prettier": "off",
     "import/prefer-default-export": "off",
     "no-console": "off",
@@ -36,6 +37,7 @@
     "class-methods-use-this": "off",
     "no-underscore-dangle": "off",
     "no-process-exit": "off",
+    "no-return-await": "warn",
     "no-param-reassign": "off",
     "consistent-return": "off",
     "prefer-destructuring": ["warn", { "object": true, "array": false }],

@@ -1,15 +1,16 @@
 import express from "express";
 import {
-  cancelOrder,
   createOrder,
   deleteOrder,
   getAllOrders,
   getOrder,
+  updateOrder,
 } from "../controllers/order.controller";
 
 const router = express.Router();
 
 router.route("/").get(getAllOrders).post(createOrder);
-router.route("/:id").get(getOrder).patch(cancelOrder).delete(deleteOrder);
+//  TODO delete should be only for the admin here
+router.route("/:id").get(getOrder).patch(updateOrder).delete(deleteOrder);
 
 export default router;

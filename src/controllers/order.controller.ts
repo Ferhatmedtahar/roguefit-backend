@@ -2,10 +2,18 @@ import { NextFunction, Request, Response } from "express";
 import { Order } from "../models/order.model";
 import { AppError } from "../utils/appError";
 import { catchAsync } from "../utils/catchAsync";
+import { APIFeatures } from "../utils/APIfeatures";
 
 export const getAllOrders = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    const orders = await Order.find();
+    const query = new APIFeatures(Order.find(), req.query)
+      .filter()
+      .sort()
+      .fields()
+      .paginate();
+
+    const orders = await query.query;
+
     if (!orders) return next(new AppError("orders could not be found", 404));
 
     res.status(200).json({
@@ -59,17 +67,22 @@ export const createOrder = catchAsync(
 );
 
 // REVIEW  UPDATE IT SELF
-export const cancelOrder = catchAsync(
+export const updateOrder = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    const order = await Order.findByIdAndUpdate(
-      req.params.id,
-      {
-        status: "canceled",
-      },
-      { runValidators: true, new: true }
-    );
+    const updateObject: any = {};
+    const { isPaid } = req.body;
+    if (isPaid) {
+      updateObject.isPaid = true; //
+      updateObject.status = "processing"; // Set the status to canceled if `isPaid` is not provided
+    } else {
+      updateObject.status = "canceled"; // Set the status to canceled if `isPaid` is not provided
+    }
+    const order = await Order.findByIdAndUpdate(req.params.id, updateObject, {
+      runValidators: true,
+      new: true,
+    });
     if (!order) return next(new AppError("order could not be canceled", 404));
-    res.status(204).json({ status: "success" });
+    res.status(200).json({ status: "success", data: order });
   }
 );
 
