@@ -4,6 +4,7 @@ import {
   login,
   protect,
   resetPassword,
+  restrictTO,
   signUp,
   updatePassword,
 } from "../controllers/auth.controller";
@@ -12,6 +13,7 @@ import {
   deleteMe,
   deleteUser,
   getAllUsers,
+  getMe,
   getUser,
   updateMe,
   updateUser,
@@ -23,15 +25,29 @@ const router = express.Router();
 
 router.post("/signup", signUp);
 router.post("/login", login);
+
 router.post("/forgotPassword", forgotPassword);
 router.patch("/resetPassword/:resetToken", resetPassword);
-router.route("/updatePassword").patch(protect, updatePassword);
 
-router.route("/updateMe").patch(protect, updateMe);
-router.route("/deleteMe").delete(protect, deleteMe);
+// $ all prev routes doesnt requires login but the rest need so :
+router.use(protect);
+
+router.route("/updatePassword").patch(updatePassword);
+
+router.route("/updateMe").patch(updateMe);
+
+router.route("/deleteMe").delete(deleteMe);
+
+router.route("/me").get(getMe, getUser);
 
 //  £ for admin
+router.use(restrictTO("admin"));
+
 router.route("/").get(getAllUsers).post(createUser);
-router.route("/:id").patch(updateUser).delete(deleteUser).get(getUser);
+router
+  .route("/:id")
+  .patch(restrictTO("admin"), updateUser)
+  .delete(restrictTO("admin"), deleteUser)
+  .get(getUser);
 
 export default router;

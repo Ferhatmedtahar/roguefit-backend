@@ -84,6 +84,7 @@ const productSchema = new mongoose.Schema(
 // ! indexes
 productSchema.index({ isAvailable: 1 });
 productSchema.index({ price: 1 });
+productSchema.index({ stock: 1 });
 
 // £  pre, post :Document and Query middlewares
 
@@ -112,19 +113,16 @@ productSchema.pre("findOneAndUpdate", function (next) {
 productSchema.pre(/^find/, function (next) {
   // eslint-disable-next-line
   const query = this as mongoose.Query<any, any>;
-
   query.select("-__v -createdAt -updatedAt");
   next();
 });
 
+// REVIEW virtual populate
+
+productSchema.virtual("reviews", {
+  ref: "Review",
+  localField: "_id",
+  foreignField: "product",
+});
+
 export const Product = mongoose.model("Product", productSchema);
-
-// productSchema.pre(
-//   "save",
-//   function (this: Query<any, Document>, next: (err?: any) => void) {
-//     const product = this as any;
-//     product.isAvailable = product.stock > 0;
-
-//     next();
-//   }
-// );

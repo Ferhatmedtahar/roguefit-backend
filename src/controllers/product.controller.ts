@@ -31,7 +31,7 @@ export const getAllProducts = catchAsync(
 
 export const getProduct = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    const product = await Product.findById(req.params.id);
+    const product = await Product.findById(req.params.id).populate("reviews");
     if (!product) {
       return next(new AppError("product not found ", 404));
     }
@@ -74,7 +74,6 @@ export const updateProduct = catchAsync(
       discount,
       stock,
       images,
-      slug,
     } = req.body;
 
     const updatedProduct = await Product.findByIdAndUpdate(
@@ -89,7 +88,6 @@ export const updateProduct = catchAsync(
         discount,
         stock,
         images,
-        slug,
       },
       {
         runValidators: true,

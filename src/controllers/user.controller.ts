@@ -38,22 +38,61 @@ export async function getUser(req: Request, res: Response, next: NextFunction) {
   });
 }
 
-export function updateUser(req: Request, res: Response, next: NextFunction) {
-  res.status(200).json({
-    status: "success",
-  });
-}
-export function deleteUser(req: Request, res: Response, next: NextFunction) {
-  res.status(200).json({
-    status: "success",
-  });
-}
+export const updateUser = catchAsync(
+  async (req: CustomReq, res: Response, next: NextFunction) => {
+    const updatedUser = await User.findByIdAndUpdate(req.params.id, req.body, {
+      runValidators: true,
+      new: true,
+    });
+    if (!updatedUser)
+      return next(new AppError("user could not be updated ADMIN ", 404));
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        updatedUser,
+      },
+    });
+  }
+);
+
+export const deleteUser = catchAsync(
+  async (req: CustomReq, res: Response, next: NextFunction) => {
+    const deletedUser = await User.findByIdAndDelete(req.params.id);
+    if (!deletedUser)
+      return next(new AppError("user could not be deleted ADMIN ", 404));
+
+    res.status(204).json({
+      status: "success",
+      data: null,
+    });
+  }
+);
+
 export function createUser(req: Request, res: Response, next: NextFunction) {
   res.status(200).json({
-    status: "success",
+    message: "this route are not implemented , please sign up ",
   });
 }
 
+/*
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+*/
 // REVIEW UPDATE THE USER DATA:name , email
 
 export const updateMe = catchAsync(
@@ -122,3 +161,8 @@ export const deleteMe = catchAsync(
     });
   }
 );
+
+export const getMe = (req: CustomReq, res: Response, next: NextFunction) => {
+  req.params.id = req.user._id;
+  next();
+};
