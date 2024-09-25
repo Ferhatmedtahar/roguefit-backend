@@ -26,55 +26,66 @@ interface UserDocument extends Document {
 }
 
 //  role can be seller ,coach, user,admin
-const userSchema = new mongoose.Schema<UserDocument>({
-  name: {
-    type: String,
-    max: [40, "a user name must be below 40 caracters"],
-    min: [2, "a user name must be above 2 caracters"],
-    trim: true,
-  },
-  email: {
-    type: String,
-    required: [true, "A user must have an email"],
-    unique: true,
-    lowercase: true,
-    validate: [validator.isEmail, "Please provide a valid email"],
-  },
-  role: {
-    type: String,
-    enum: ["seller", "coach", "user", "admin"],
-    default: "user",
-  },
-  photo: {
-    type: String,
-    default: "default.png",
-  },
-  password: {
-    type: String,
-    required: [true, "a user must have a password"],
-    minLength: 8,
-  },
-  passwordConfirm: {
-    type: String as unknown as string | undefined,
-    required: [true, "a user must have a confirm password "],
-    minLength: 8,
+const userSchema = new mongoose.Schema<UserDocument>(
+  {
+    name: {
+      type: String,
+      max: [40, "a user name must be below 40 caracters"],
+      min: [2, "a user name must be above 2 caracters"],
+      trim: true,
+    },
+    email: {
+      type: String,
+      required: [true, "A user must have an email"],
+      unique: true,
+      lowercase: true,
+      validate: [validator.isEmail, "Please provide a valid email"],
+    },
+    role: {
+      type: String,
+      enum: ["seller", "coach", "user", "admin"],
+      default: "user",
+    },
+    photo: {
+      type: String,
+      default: "default.png",
+    },
+    password: {
+      type: String,
+      required: [true, "a user must have a password"],
+      minLength: 8,
+    },
+    passwordConfirm: {
+      type: String as unknown as string | undefined,
+      required: [true, "a user must have a confirm password "],
+      minLength: 8,
 
-    validate: {
-      validator: function (this: any, value: string): boolean {
-        return value === this.password;
+      validate: {
+        validator: function (this: any, value: string): boolean {
+          return value === this.password;
+        },
+        message:
+          "password and password Confirm not matched , please  check again!",
       },
-      message:
-        "password and password Confirm not matched , please  check again!",
+    },
+    passwordChangedAt: Date,
+    passwordResetToken: String,
+    passwordResetTokenExpires: Date,
+    active: {
+      type: Boolean,
+      default: true,
+      select: false,
     },
   },
-  passwordChangedAt: Date,
-  passwordResetToken: String,
-  passwordResetTokenExpires: Date,
-  active: {
-    type: Boolean,
-    default: true,
-    select: false,
-  },
+  {
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
+  }
+);
+userSchema.virtual("reviews", {
+  ref: "Review",
+  localField: "_id",
+  foreignField: "user",
 });
 
 //  DOCUMENT pre save middleware
@@ -84,7 +95,6 @@ userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
   this.password = await bcrypt.hash(this.password, 12);
   this.passwordConfirm = undefined;
-
   next();
 });
 
@@ -144,4 +154,5 @@ userSchema.pre(/^find/, function (next) {
   query.find({ active: { $ne: false } });
   next();
 });
+
 export const User = mongoose.model<UserDocument>("User", userSchema);

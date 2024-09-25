@@ -30,7 +30,11 @@ export const getAllUsers = catchAsync(
   }
 );
 export async function getUser(req: Request, res: Response, next: NextFunction) {
-  const user = await User.findById(req.params.id);
+  const user = await User.findById(req.params.id).populate({
+    path: "reviews",
+    select: "content rating product -user",
+  });
+
   if (!user) return next(new AppError("user not found!", 404));
   res.status(200).json({
     status: "success",

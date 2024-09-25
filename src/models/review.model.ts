@@ -43,10 +43,10 @@ reviewSchema.pre(/^find/, function (next) {
       select: "name photo ",
     })
     .select("-__v -createdAt -updatedAt");
-  // query.populate({
-  //   path: "product",
-  //   select: "name",
-  // });
+  query.populate({
+    path: "product",
+    select: "name -__v -createdAt -updatedAt ",
+  });
   next();
 });
 
