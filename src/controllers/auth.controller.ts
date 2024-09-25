@@ -6,6 +6,10 @@ import { User } from "../models/user.model";
 import { AppError } from "../utils/appError";
 import { catchAsync } from "../utils/catchAsync";
 
+interface CustomReq extends Request {
+  user?: any;
+}
+
 // REVIEW sign token to clean the code
 
 const signToken = (id: any): string | undefined => {
@@ -32,7 +36,7 @@ export const signUp = catchAsync(
 
     const token = signToken(newUser._id);
     if (!token) {
-      next(new AppError("Token generation failed ", 404));
+      return next(new AppError("Token generation failed ", 404));
     }
     res.status(201).json({
       status: "success",
@@ -62,11 +66,47 @@ export const login = catchAsync(
     const token = signToken(user._id);
 
     if (!token) {
-      next(new AppError("Token generation failed ", 404));
+      return next(new AppError("Token generation failed ", 404));
     }
     res.status(200).json({
       status: "success",
       token,
     });
+  }
+);
+
+export const protect = catchAsync(
+  async (req: CustomReq, res: Response, next: NextFunction) => {
+    let token;
+    if (
+      req.headers.authorization &&
+      req.headers.authorization?.startsWith("Bearer")
+    )
+      token = req.headers.authorization.split(" ")[1];
+    if (!token) return next(new AppError("invalid token", 401));
+
+    if (!process.env.JWT_SECRET)
+      return next(new AppError("secret could not be found", 404));
+
+    const decoded: any = jwt.verify(token, process.env.JWT_SECRET);
+
+    const user = await User.findById(decoded.id);
+
+    if (!user)
+      return next(
+        new AppError(
+          "The user belonginh to this token does no longer exist.",
+          401
+        )
+      );
+    if (user.changedPasswordAfter(decoded.iat)) {
+      return next(
+        new AppError("user recently changed password, please log in again", 401)
+      );
+    }
+    // $GRANT ACCESS TO PROTECTED ROUTES & REGISTER THE USER IN THE REQ
+
+    req.user = user;
+    next();
   }
 );

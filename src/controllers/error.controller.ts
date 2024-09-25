@@ -25,6 +25,24 @@ function handleValidationError(err: mongoose.Error.ValidationError): AppError {
   return new AppError(message, 404);
 }
 
+//  the functions that are responsible to turn the error to apperror which we are prepared to
+
+function handleJWTError() {
+  return new AppError("Invalid token , please log in again!", 401);
+}
+
+function handleTokenExpire() {
+  return new AppError("Your token had expired ! please log in again", 401);
+}
+
+/*
+
+
+! the global handler
+
+
+*/
+
 export const globalErrorHandler = (
   err: any,
   req: Request,
@@ -59,13 +77,13 @@ export const globalErrorHandler = (
     if (err.name === "ValidationError") {
       errorApp = handleValidationError(err);
     }
-    // if (err.name === 'JsonWebTokenError') {
-    //   errorApp = handleJWTError(err);
-    // }
+    if (err.name === "JsonWebTokenError") {
+      errorApp = handleJWTError();
+    }
 
-    // if (err.name === 'TokenExpiredError') {
-    //   errorApp = handleTokenExpire(err);
-    // }
+    if (err.name === "TokenExpiredError") {
+      errorApp = handleTokenExpire();
+    }
     if (errorApp.isOperational) {
       //  OPERATIONAL ,trusted error : we can send to client, errors that we can define them
       res.status(errorApp.statusCode).json({
@@ -78,20 +96,10 @@ export const globalErrorHandler = (
     else {
       //  NON OPERATIONAL ERROR :error didnt create our selfs
       //  programming error or unknowen error , DONT LEAK ERROR DETAILS TO CLIENT
-      console.error("error❌", err);
+      console.error("ERROR 💥", err);
       res
         .status(500)
         .json({ status: "error", message: "Something went wrong" });
     }
   }
 };
-
-//  the functions that are responsible to turn the error to apperror which we are prepared to
-
-// function handleJWTError(err: Error) {
-//   return new appError("Invalid token , please log in again!", 401);
-// }
-
-// function handleTokenExpire(err: Error) {
-//   return new appError("Your token had expired ! please log in again", 401);
-// }

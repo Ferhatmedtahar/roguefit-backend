@@ -1,11 +1,15 @@
 import { NextFunction, Request, Response } from "express";
 import { Order } from "../models/order.model";
+import { APIFeatures } from "../utils/APIfeatures";
 import { AppError } from "../utils/appError";
 import { catchAsync } from "../utils/catchAsync";
-import { APIFeatures } from "../utils/APIfeatures";
 
+interface CustomReq extends Request {
+  user?: any;
+}
 export const getAllOrders = catchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: CustomReq, res: Response, next: NextFunction) => {
+    console.log(req?.user);
     const query = new APIFeatures(Order.find(), req.query)
       .filter()
       .sort()

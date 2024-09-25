@@ -12,12 +12,14 @@ interface UserDocument extends Document {
   passwordChangedAt: Date;
   passwordResetToken: any;
   passwordResetTokenExpires: any;
-
   passwordConfirm: string | undefined;
+
   correctPassword: (
     candidatePassword: string,
     userPassword: string
   ) => Promise<boolean>;
+
+  changedPasswordAfter: (JWTTimestamp: any) => boolean;
 }
 
 //  role can be seller ,coach, user,admin
@@ -62,7 +64,7 @@ const userSchema = new mongoose.Schema<UserDocument>({
         "password and password Confirm not matched , please  check again!",
     },
   },
-  passwordChangedAt: {},
+  passwordChangedAt: Date,
   passwordResetToken: {},
   passwordResetTokenExpires: {},
   active: {
@@ -88,7 +90,7 @@ userSchema.pre(/^find/, function (this: Query<any, any>, next) {
   next();
 });
 
-//  ! check the user password with   the input when he login {inctance method :available  in all documents} and  RETURN TRUE OR FALSE
+//  !login : check the user password with   the input when he login {inctance method :available  in all documents} and  RETURN TRUE OR FALSE
 
 userSchema.methods.correctPassword = async function (
   candidatePassword: string,
@@ -98,4 +100,18 @@ userSchema.methods.correctPassword = async function (
   return correct;
 };
 
+// !protect: check if the password changed after the jwt was issued using the passwordchangedAt if it existt we compare the jwt iat
+// ! if it doesnt exist we pass directly
+
+userSchema.methods.changedPasswordAfter = function (JWTTimestamp: any) {
+  if (this.passwordChangedAt) {
+    // £JWTTimestamp are in the seconds and this.passwordChangedAt is in the date format so we change it and compare
+    const timestamp = this.passwordChangedAt.getTime();
+    return timestamp > JWTTimestamp * 1000;
+  }
+  return false;
+};
+
+//
+//
 export const User = mongoose.model<UserDocument>("User", userSchema);
