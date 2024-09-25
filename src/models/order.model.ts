@@ -87,7 +87,12 @@ orderSchema.pre("save", async function (next) {
   });
 
   const promises: Query<any, any>[] = [];
+  // !check if the stock serve the the demanded quantity
   this.products.forEach(async (demand: any) => {
+    // £check if the product exist before checking the quanity
+    if (!demand.product)
+      next(new AppError("the product are not available!", 404));
+
     if (demand.product?.stock < demand.quantity) {
       next(
         new AppError(

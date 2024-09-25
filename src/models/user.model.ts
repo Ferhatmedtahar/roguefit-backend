@@ -1,4 +1,5 @@
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import mongoose, { Query } from "mongoose";
 import validator from "validator";
 
@@ -10,8 +11,8 @@ interface UserDocument extends Document {
   password: string;
   active: boolean;
   passwordChangedAt: Date;
-  passwordResetToken: any;
-  passwordResetTokenExpires: any;
+  passwordResetToken: string | undefined;
+  passwordResetTokenExpires: Date | undefined;
   passwordConfirm: string | undefined;
 
   correctPassword: (
@@ -20,6 +21,8 @@ interface UserDocument extends Document {
   ) => Promise<boolean>;
 
   changedPasswordAfter: (JWTTimestamp: any) => boolean;
+
+  createPasswordResetToken: () => string;
 }
 
 //  role can be seller ,coach, user,admin
@@ -32,10 +35,10 @@ const userSchema = new mongoose.Schema<UserDocument>({
   },
   email: {
     type: String,
-    required: [true, "a user must have an email"],
+    required: [true, "A user must have an email"],
     unique: true,
     lowercase: true,
-    validate: [validator.isEmail, "please provide a valid email"],
+    validate: [validator.isEmail, "Please provide a valid email"],
   },
   role: {
     type: String,
@@ -65,8 +68,8 @@ const userSchema = new mongoose.Schema<UserDocument>({
     },
   },
   passwordChangedAt: Date,
-  passwordResetToken: {},
-  passwordResetTokenExpires: {},
+  passwordResetToken: String,
+  passwordResetTokenExpires: Date,
   active: {
     type: Boolean,
     default: true,
@@ -113,5 +116,25 @@ userSchema.methods.changedPasswordAfter = function (JWTTimestamp: any) {
 };
 
 //
-//
+//! forget Password : generate reset token to send it .
+
+userSchema.methods.createPasswordResetToken = function () {
+  const resetToken = crypto.randomBytes(32).toString("hex");
+  this.passwordResetToken = crypto
+    .createHash("sha256")
+    .update(resetToken)
+    .digest("hex");
+  this.passwordResetTokenExpires = Date.now() + 60 * 10 * 1000;
+
+  return resetToken;
+};
+
+//  !RESET password
+
+userSchema.pre("save", function (next) {
+  if (!this.isModified("password") || this.isNew) return next();
+  this.passwordChangedAt = new Date(Date.now() - 1000);
+  next();
+});
+
 export const User = mongoose.model<UserDocument>("User", userSchema);

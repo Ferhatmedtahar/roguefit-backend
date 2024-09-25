@@ -1,5 +1,5 @@
 import express from "express";
-import { protect } from "../controllers/auth.controller";
+import { protect, restrictTO } from "../controllers/auth.controller";
 import {
   createOrder,
   deleteOrder,
@@ -10,8 +10,15 @@ import {
 
 const router = express.Router();
 
-router.route("/").get(protect, getAllOrders).post(createOrder);
-//  TODO delete should be only for the admin here
-router.route("/:id").get(getOrder).patch(updateOrder).delete(deleteOrder);
+router
+  .route("/")
+  .get(protect, getAllOrders)
+  .post(protect, restrictTO("user", "coach"), createOrder);
+
+router
+  .route("/:id")
+  .get(protect, getOrder)
+  .patch(protect, restrictTO("user", "coach"), updateOrder)
+  .delete(protect, restrictTO("admin"), deleteOrder);
 
 export default router;

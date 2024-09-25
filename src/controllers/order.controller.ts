@@ -9,7 +9,6 @@ interface CustomReq extends Request {
 }
 export const getAllOrders = catchAsync(
   async (req: CustomReq, res: Response, next: NextFunction) => {
-    console.log(req?.user);
     const query = new APIFeatures(Order.find(), req.query)
       .filter()
       .sort()
@@ -48,9 +47,17 @@ export const getOrder = catchAsync(
 export const createOrder = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     // £ we dont get the total price but we calculate it
-    const { customerContact, status, deliveryType, products, state, adress } =
-      req.body;
+    const {
+      customerContact,
+      status,
+      deliveryType,
+      products,
+      state,
+      adress,
+      isPaid,
+    } = req.body;
 
+    // $ need to check the products and id and stock for them .
     const newOrder = await Order.create({
       customerContact,
       state,
@@ -58,10 +65,11 @@ export const createOrder = catchAsync(
       deliveryType,
       status,
       products,
+      isPaid,
     });
     if (!newOrder) return next(new AppError("order could not be created", 400));
     const selectedOrder = await Order.findById(newOrder._id).select(
-      "customerContact state adress deliveryType status products totalPrice"
+      "customerContact state adress deliveryType status products totalPrice isPaid"
     );
     res.status(201).json({
       status: "success",
@@ -74,7 +82,12 @@ export const createOrder = catchAsync(
 export const updateOrder = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const updateObject: any = {};
+    // TODO update the status and paid only , cancel can happend only if the status still processing or pending .
+
+    const curOrder = await Order.findById(req.params.id);
     const { isPaid } = req.body;
+
+    // cancel order only when its the proccessing and pending .
     if (isPaid) {
       updateObject.isPaid = true; //
       updateObject.status = "processing"; // Set the status to canceled if `isPaid` is not provided

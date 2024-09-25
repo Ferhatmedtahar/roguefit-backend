@@ -18,6 +18,7 @@
     "object-shorthand": ["off", "always", { "avoidQuotes": true }],
     "prettier/prettier": "off",
     "import/prefer-default-export": "off",
+    "arrow-body-style": ["off", "as-needed"],
     "no-console": "off",
     "@typescript-eslint/no-extra-non-null-assertion": "off",
     "no-unused-vars": "off",
