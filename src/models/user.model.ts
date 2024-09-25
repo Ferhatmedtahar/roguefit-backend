@@ -73,6 +73,7 @@ const userSchema = new mongoose.Schema<UserDocument>({
   active: {
     type: Boolean,
     default: true,
+    select: false,
   },
 });
 
@@ -137,4 +138,10 @@ userSchema.pre("save", function (next) {
   next();
 });
 
+// ! when we delete a user:```active:false ``` we want to dont select it
+userSchema.pre(/^find/, function (next) {
+  const query = this as Query<UserDocument, UserDocument>;
+  query.find({ active: { $ne: false } });
+  next();
+});
 export const User = mongoose.model<UserDocument>("User", userSchema);

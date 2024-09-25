@@ -5,12 +5,15 @@ import {
   protect,
   resetPassword,
   signUp,
+  updatePassword,
 } from "../controllers/auth.controller";
 import {
   createUser,
+  deleteMe,
   deleteUser,
   getAllUsers,
   getUser,
+  updateMe,
   updateUser,
 } from "../controllers/user.controller";
 
@@ -22,8 +25,12 @@ router.post("/signup", signUp);
 router.post("/login", login);
 router.post("/forgotPassword", forgotPassword);
 router.patch("/resetPassword/:resetToken", resetPassword);
-//  £ for admin
+router.route("/updatePassword").patch(protect, updatePassword);
 
+router.route("/updateMe").patch(protect, updateMe);
+router.route("/deleteMe").delete(protect, deleteMe);
+
+//  £ for admin
 router.route("/").get(getAllUsers).post(createUser);
 router.route("/:id").patch(updateUser).delete(deleteUser).get(getUser);
 

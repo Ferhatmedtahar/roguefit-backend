@@ -23,6 +23,44 @@ const signToken = (id: any): string | undefined => {
   return token;
 };
 
+//  REVIEW send a token alogn with a response
+const sendToken = (res: Response, statusCode: number, user: any) => {
+  const token = signToken(user._id);
+
+  // !cookie sending part: Convert JWT_COOKIE_EXPIRES_IN from string to a number of days and add to current date
+  const cookieExpiresIn = parseInt(
+    process.env.JWT_COOKIE_EXPIRES_IN || "90",
+    10
+  );
+  const cookieExpirationDate = new Date(
+    Date.now() + cookieExpiresIn * 24 * 60 * 60 * 1000
+  );
+
+  const cookieOptions = {
+    expires: cookieExpirationDate,
+    httpOnly: true, // Security best practice: Prevents client-side access to cookies.
+    secure: process.env.NODE_ENV === "production", // Send the cookie over HTTPS in production.
+  };
+
+  res.cookie("jwt", token, cookieOptions);
+  user.password = undefined;
+  res.status(statusCode).json({
+    status: "success",
+    token,
+    data: {
+      user,
+    },
+  });
+};
+
+/*
+
+
+
+
+
+*/
+
 // REVIEW signup and the steps
 
 export const signUp = catchAsync(
@@ -37,17 +75,7 @@ export const signUp = catchAsync(
     });
     if (!newUser) return next(new AppError("user could not be created", 400));
 
-    const token = signToken(newUser._id);
-    if (!token) {
-      return next(new AppError("Token generation failed ", 404));
-    }
-    res.status(201).json({
-      status: "success",
-      token,
-      data: {
-        user: newUser,
-      },
-    });
+    sendToken(res, 201, newUser);
   }
 );
 
@@ -60,22 +88,16 @@ export const login = catchAsync(
     if (!email || !password)
       return next(new AppError("email or password are missing ", 400));
 
-    const user = await User.findOne({ email }).select("password");
+    const user = await User.findOne({ email }).select(
+      "password name email role"
+    );
     // check if user exist
 
     if (!user || !(await user.correctPassword(password, user.password)))
       return next(new AppError("Incorrect email or  password!", 401));
 
     // generate token and check if it exist
-    const token = signToken(user._id);
-
-    if (!token) {
-      return next(new AppError("Token generation failed ", 404));
-    }
-    res.status(200).json({
-      status: "success",
-      token,
-    });
+    sendToken(res, 200, user);
   }
 );
 
@@ -211,10 +233,38 @@ export const resetPassword = catchAsync(
     await user.save();
 
     // 3 log the user in
-    const token = signToken(user._id);
-    res.status(200).json({
-      status: "success",
-      token,
-    });
+    sendToken(res, 200, user);
+  }
+);
+
+// REVIEW update the current user password
+
+export const updatePassword = catchAsync(
+  async (req: CustomReq, res: Response, next: NextFunction) => {
+    const { currentPassword, password, passwordConfirm } = req.body;
+
+    if (!currentPassword || !password || !passwordConfirm)
+      return next(
+        new AppError(
+          "please provide all the nesssecary information to update your password",
+          400
+        )
+      );
+
+    const user = await User.findById(req.user._id).select("password");
+
+    if (!user) {
+      return next(new AppError("User not found.", 404));
+    }
+
+    if (!(await user.correctPassword(currentPassword, user.password)))
+      return next(new AppError("incorrect password, please try again!", 401));
+
+    user.password = password;
+    user.passwordConfirm = passwordConfirm;
+
+    await user.save();
+
+    sendToken(res, 200, user);
   }
 );
