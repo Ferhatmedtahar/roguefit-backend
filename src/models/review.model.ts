@@ -23,7 +23,6 @@ const reviewSchema = new mongoose.Schema(
       type: Number,
       max: 5,
       min: 1,
-      // set:(value)=>Math.round(value*10)/10
     },
   },
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
@@ -40,7 +39,7 @@ reviewSchema.pre(/^find/, function (next) {
   query
     .populate({
       path: "user",
-      select: "name photo ",
+      select: "name photo email",
     })
     .select("-__v -createdAt -updatedAt");
   // query.populate({
