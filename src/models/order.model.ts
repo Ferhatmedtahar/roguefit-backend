@@ -14,11 +14,11 @@ import { Product } from "./product.model";
 
 const orderSchema = new mongoose.Schema(
   {
-    // customer: {
-    //   type: mongoose.Schema.Types.ObjectId,
-    //   ref: "User",
-    //   required: [true, "a order must have a user"],
-    // },
+    customer: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: [true, "a order must have a user"],
+    },
     customerContact: {
       type: String,
       required: [true, "Order must have a customer Contanct"],
@@ -73,6 +73,8 @@ const orderSchema = new mongoose.Schema(
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
 
+// 1  populate to the user
+//
 orderSchema.pre("save", function (next) {
   if (!/^0[567]\d{8}$/.test(this.customerContact))
     next(new AppError("the contact number is wrong", 400));
@@ -126,8 +128,6 @@ orderSchema.pre("save", async function (next) {
   this.totalPrice = prices.reduce((acc, cur) => acc + cur, 0);
 });
 
-export const Order = mongoose.model("Order", orderSchema);
-
 // check if the stock are available to serve the order
 // get an array of prices after calculating the discount if exist
 // update the stock
@@ -136,6 +136,11 @@ orderSchema.pre(/^find/, function (next) {
   // eslint-disable-next-line
   const query = this as mongoose.Query<any, any>;
 
-  query.select("-__v -createdAt -updatedAt");
+  query.select("-__v -createdAt -updatedAt").populate({
+    path: "customer",
+    select: "name email",
+  });
   next();
 });
+
+export const Order = mongoose.model("Order", orderSchema);

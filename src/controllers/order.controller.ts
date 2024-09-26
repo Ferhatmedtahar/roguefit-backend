@@ -45,8 +45,9 @@ export const getOrder = catchAsync(
 
 //  REVIEW create a order
 export const createOrder = catchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: CustomReq, res: Response, next: NextFunction) => {
     // £ we dont get the total price but we calculate it
+    const customer = req.user._id;
     const {
       customerContact,
       status,
@@ -59,6 +60,7 @@ export const createOrder = catchAsync(
 
     // $ need to check the products and id and stock for them .
     const newOrder = await Order.create({
+      customer,
       customerContact,
       state,
       adress,

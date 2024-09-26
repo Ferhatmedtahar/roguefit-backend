@@ -82,10 +82,18 @@ const userSchema = new mongoose.Schema<UserDocument>(
     toObject: { virtuals: true },
   }
 );
+// !VIRTUAL the review
 userSchema.virtual("reviews", {
   ref: "Review",
   localField: "_id",
   foreignField: "user",
+});
+// ! VIRTUAL the orders
+
+userSchema.virtual("orders", {
+  ref: "Order",
+  localField: "_id",
+  foreignField: "customer",
 });
 
 //  DOCUMENT pre save middleware

@@ -1,4 +1,4 @@
-import mongoose, { UpdateQuery } from "mongoose";
+import mongoose, { Query, UpdateQuery } from "mongoose";
 import slugify from "slugify";
 
 const productSchema = new mongoose.Schema(
@@ -69,13 +69,6 @@ const productSchema = new mongoose.Schema(
       default: 0,
     },
     images: [String],
-
-    orders: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Order",
-      },
-    ],
     slug: String,
   },
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
@@ -88,6 +81,13 @@ productSchema.index({ stock: 1 });
 
 // £  pre, post :Document and Query middlewares
 
+//  populate the orders
+productSchema.pre(/^find/, function (next) {
+  const query = this as Query<any, any>;
+  query.select("-__v -createdAt -updatedAt");
+  next();
+});
+
 // check the price and add slug field and fill the isAvailable field
 productSchema.pre("save", function (next) {
   // Check if discount is less than price
@@ -98,6 +98,7 @@ productSchema.pre("save", function (next) {
   this.isAvailable = this.stock > 0;
   next();
 });
+
 //  check the availability
 productSchema.pre("findOneAndUpdate", function (next) {
   const update = this.getUpdate() as UpdateQuery<typeof this>;
@@ -107,13 +108,6 @@ productSchema.pre("findOneAndUpdate", function (next) {
     // Set isAvailable based on the stock value
     update.isAvailable = update.stock > 0;
   }
-  next();
-});
-
-productSchema.pre(/^find/, function (next) {
-  // eslint-disable-next-line
-  const query = this as mongoose.Query<any, any>;
-  query.select("-__v -createdAt -updatedAt");
   next();
 });
 
