@@ -1,5 +1,9 @@
 import { NextFunction, Request, Response } from "express";
 
+import multer from "multer";
+
+import sharp from "sharp";
+
 import { User } from "../models/user.model";
 import { APIFeatures } from "../utils/APIfeatures";
 import { AppError } from "../utils/appError";
@@ -8,7 +12,42 @@ import { catchAsync } from "../utils/catchAsync";
 interface CustomReq extends Request {
   user?: any;
 }
+const multerStrorage = multer.memoryStorage();
+const multerFilter = (req: Request, file: any, cb: any) => {
+  if (file.mimetype.startsWith("image")) {
+    cb(null, true);
+  } else {
+    cb(new AppError("Not an image!, please upload only Images.", 400), false);
+  }
+};
 
+const upload = multer({ storage: multerStrorage, fileFilter: multerFilter });
+export const uploadUserPhoto = upload.single("photo");
+
+//  !resize the user photo
+
+export const resizeUserPhoto = catchAsync(
+  async (req: CustomReq, res: Response, next: NextFunction) => {
+    if (!req.file) return next();
+    //  redefine the filename bcs we removed the storage from disk to memory to process the images before its saved
+    req.file.filename = `user-${req.user._id}-${Date.now()}.jpeg`;
+    // sharp
+    await sharp(req.file.buffer)
+      .resize(500, 500)
+      .toFormat("jpeg")
+      .jpeg({ quality: 90 })
+      .toFile(`src/public/img/users/${req.file.filename}`);
+    //  write in in a file in our disk
+    next();
+  }
+);
+
+/*
+
+
+
+
+*/
 export const getAllUsers = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const query = new APIFeatures(User.find(), req.query)
@@ -107,7 +146,10 @@ export function createUser(req: Request, res: Response, next: NextFunction) {
 
 export const updateMe = catchAsync(
   async (req: CustomReq, res: Response, next: NextFunction) => {
-    const { name, email } = req.body;
+    if (req.file) req.body.photo = req.file.filename;
+
+    const { name, email, photo } = req.body;
+
     if (req.body.password || req.body.passwordConfirm)
       return next(
         new AppError(
@@ -115,12 +157,15 @@ export const updateMe = catchAsync(
           400
         )
       );
+
     // update only the field i want
+
     const updatedUser = await User.findByIdAndUpdate(
       req.user._id,
       {
         name,
         email,
+        photo,
       },
       { new: true, runValidators: true }
     );

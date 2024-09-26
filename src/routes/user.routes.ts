@@ -15,8 +15,10 @@ import {
   getAllUsers,
   getMe,
   getUser,
+  resizeUserPhoto,
   updateMe,
   updateUser,
+  uploadUserPhoto,
 } from "../controllers/user.controller";
 
 const router = express.Router();
@@ -33,8 +35,8 @@ router.patch("/resetPassword/:resetToken", resetPassword);
 router.use(protect);
 
 router.route("/updatePassword").patch(updatePassword);
-
-router.route("/updateMe").patch(updateMe);
+// upload.single("photo")
+router.route("/updateMe").patch(uploadUserPhoto, resizeUserPhoto, updateMe);
 
 router.route("/deleteMe").delete(deleteMe);
 

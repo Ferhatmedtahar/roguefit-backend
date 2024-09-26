@@ -6,7 +6,9 @@ import {
   deleteProduct,
   getAllProducts,
   getProduct,
+  resizeProductImages,
   updateProduct,
+  uploadProductImages,
 } from "../controllers/product.controller";
 
 import reviewRouter from "./review.routes";
@@ -16,10 +18,22 @@ const router = express.Router();
 router
   .route("/")
   .get(getAllProducts)
-  .post(protect, restrictTO("admin", "seller"), createProduct);
+  .post(
+    protect,
+    restrictTO("admin", "seller"),
+    uploadProductImages,
+    resizeProductImages,
+    createProduct
+  );
 router
   .route("/:id")
-  .patch(protect, restrictTO("admin", "seller"), updateProduct)
+  .patch(
+    protect,
+    restrictTO("admin", "seller"),
+    uploadProductImages,
+    resizeProductImages,
+    updateProduct
+  )
   .delete(protect, restrictTO("admin", "seller"), deleteProduct)
   .get(getProduct);
 

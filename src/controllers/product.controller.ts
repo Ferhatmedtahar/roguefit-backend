@@ -1,10 +1,64 @@
 import { NextFunction, Request, Response } from "express";
+import multer from "multer";
+import sharp from "sharp";
 import { Product } from "../models/product.model";
 import { APIFeatures } from "../utils/APIfeatures";
 import { AppError } from "../utils/appError";
 import { catchAsync } from "../utils/catchAsync";
 
-// ! get all products
+interface CustomReq extends Request {
+  user?: any;
+}
+
+const multerStrorage = multer.memoryStorage();
+const multerFilter = (req: Request, file: any, cb: any) => {
+  if (file.mimetype.startsWith("image")) {
+    cb(null, true);
+  } else {
+    cb(new AppError("Not an image!, please upload only Images.", 400), false);
+  }
+};
+
+const upload = multer({ storage: multerStrorage, fileFilter: multerFilter });
+export const uploadProductImages = upload.array("images", 3);
+
+//  !resize the user photo
+
+export const resizeProductImages = catchAsync(
+  async (req: CustomReq, res: Response, next: NextFunction) => {
+    if (!req.files) return next();
+
+    console.log(req.files);
+
+    req.body.images = [];
+    // Ensure req.files is an array
+    const files = req.files as Express.Multer.File[];
+
+    await Promise.all(
+      files.map(async (file: any, index: number) => {
+        const fileName = `product-${req.user._id}-${Date.now()}-${index + 1}.jpeg`;
+
+        await sharp(file.buffer)
+          .resize(800, 800)
+          .toFormat("jpeg")
+          .jpeg({ quality: 90 })
+          .toFile(`src/public/img/products/${fileName}`);
+
+        req.body.images.push(fileName);
+      })
+    );
+    next();
+  }
+);
+/*
+
+      !saving product images 
+$
+^
+|
+£CRUD PRODUCT OP
+    ! get all products
+*/
 
 export const getAllProducts = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -47,7 +101,29 @@ export const getProduct = catchAsync(
 // $ create one product
 export const createProduct = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    const newProduct = await Product.create(req.body);
+    const {
+      name,
+      category,
+      description,
+      summary,
+      usage,
+      price,
+      discount,
+      stock,
+      images,
+    } = req.body;
+
+    const newProduct = await Product.create({
+      name,
+      category,
+      description,
+      summary,
+      usage,
+      price,
+      discount,
+      stock,
+      images,
+    });
     if (!newProduct) {
       return next(new AppError("could not be created", 400));
     }
