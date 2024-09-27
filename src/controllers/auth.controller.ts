@@ -5,7 +5,7 @@ import jwt from "jsonwebtoken";
 import crypto from "crypto";
 
 import { User } from "../models/user.model";
-import { sendEmail } from "../services/email";
+import { Email } from "../services/email";
 import { AppError } from "../utils/appError";
 import { catchAsync } from "../utils/catchAsync";
 
@@ -73,6 +73,8 @@ export const signUp = catchAsync(
       password,
       passwordConfirm,
     });
+    const url = `${req.protocol}://${req.get("host")}/me`;
+    await new Email(newUser, url).sendWelcome();
     if (!newUser) return next(new AppError("user could not be created", 400));
 
     sendToken(res, 201, newUser);
@@ -176,18 +178,18 @@ export const forgotPassword = catchAsync(
 
     // $ 3 /send this reset token on url in email
 
-    const resetURL = `${req.protocol}://${req.get("host")}/api/v1/users/resetPassword/${resetToken}`;
-
-    const message = `Forgot your password?Sumbit a Patch REQUEST with your new password and the confirm password to :${resetURL}.\nIf you didnt forget your password , please ignore this email!  `;
+    // const message = `Forgot your password?Sumbit a Patch REQUEST with your new password and the confirm password to :${resetURL}.\nIf you didnt forget your password , please ignore this email!  `;
 
     // £ IF ERRROR HAPPEND WE WANT TO RESET THE RESETTOKEN AND EXPIRES 'UNDEFINED' AND SAVE.
 
     try {
-      await sendEmail({
-        email: user.email,
-        subject: "your password reset Token (valid for 10 min)",
-        message,
-      });
+      const resetURL = `${req.protocol}://${req.get("host")}/api/v1/users/resetPassword/${resetToken}`;
+      await new Email(user, resetURL).sendResetPassword();
+      // await sendEmail({
+      //   email: user.email,
+      //   subject: "your password reset Token (valid for 10 min)",
+      //   message,
+      // });
 
       // !RESPONSE
 

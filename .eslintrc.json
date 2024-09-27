@@ -41,11 +41,12 @@
     "no-return-await": "warn",
     "no-param-reassign": "off",
     "consistent-return": "off",
+    "no-else-return": "off",
     "prefer-destructuring": ["warn", { "object": true, "array": false }],
     "import/no-extraneous-dependencies": [
-      "error",
+      "warn",
       {
-        "devDependencies": false,
+        "devDependencies": true,
         "optionalDependencies": false,
         "peerDependencies": false
       }
