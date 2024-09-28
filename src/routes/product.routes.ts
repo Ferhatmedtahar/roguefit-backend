@@ -2,10 +2,12 @@ import express from "express";
 
 import { protect, restrictTO } from "../controllers/auth.controller";
 import {
+  aliasTopProducts,
   createProduct,
   deleteProduct,
   getAllProducts,
   getProduct,
+  getProductStats,
   resizeProductImages,
   updateProduct,
   uploadProductImages,
@@ -20,6 +22,13 @@ import reviewRouter from "./review.routes";
 
 const router = express.Router();
 
+router.use("/:productId/reviews", reviewRouter);
+
+router.route("/top-5-cheap").get(aliasTopProducts, getAllProducts);
+
+router.route("/stats").get(getProductStats);
+
+// £ basic CRUD operatios
 router
   .route("/")
   .get(getAllProducts)
@@ -31,6 +40,7 @@ router
     validateRequest(checkProductSchema),
     createProduct
   );
+
 router
   .route("/:id")
   .patch(
@@ -43,8 +53,6 @@ router
   )
   .delete(protect, restrictTO("admin", "seller"), deleteProduct)
   .get(getProduct);
-
-router.use("/:productId/reviews", reviewRouter);
 
 // router
 //   .route("/:productId/reviews")

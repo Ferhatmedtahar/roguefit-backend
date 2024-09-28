@@ -58,6 +58,52 @@ $
     ! get all products
 */
 
+//  $ top 5 products
+export const aliasTopProducts = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  req.query = {
+    limit: "5",
+    sort: "-ratingAverage,price",
+    fields: "name,price,ratingAverage,summary,difficulty",
+  };
+  next();
+};
+
+//   get stats about the products
+export const getProductStats = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const stats = await Product.aggregate([
+      {
+        $group: {
+          _id: "$category",
+          numProducts: { $sum: 1 },
+          numRating: { $sum: "$ratingQuantity" },
+          averageRating: { $avg: "$ratingAverage" },
+          averagePrice: { $avg: "$price" },
+          minPrice: { $min: "$price" },
+          maxPrice: { $max: "$price" },
+        },
+      },
+      {
+        $sort: {
+          averagePrice: 1,
+        },
+      },
+    ]);
+
+    if (!stats) return next(new AppError("could not get this statistics", 404));
+    res.status(200).json({
+      status: "success",
+      data: {
+        stats,
+      },
+    });
+  }
+);
+
 export const getAllProducts = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const query = new APIFeatures(Product.find(), req.query)
