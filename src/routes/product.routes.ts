@@ -11,6 +11,11 @@ import {
   uploadProductImages,
 } from "../controllers/product.controller";
 
+import {
+  checkProductSchema,
+  updateProductSchema,
+} from "../validators/product.validator";
+import { validateRequest } from "../validators/validate";
 import reviewRouter from "./review.routes";
 
 const router = express.Router();
@@ -23,6 +28,7 @@ router
     restrictTO("admin", "seller"),
     uploadProductImages,
     resizeProductImages,
+    validateRequest(checkProductSchema),
     createProduct
   );
 router
@@ -32,6 +38,7 @@ router
     restrictTO("admin", "seller"),
     uploadProductImages,
     resizeProductImages,
+    validateRequest(updateProductSchema),
     updateProduct
   )
   .delete(protect, restrictTO("admin", "seller"), deleteProduct)

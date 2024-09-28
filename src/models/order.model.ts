@@ -53,7 +53,7 @@ const orderSchema = new mongoose.Schema(
       // Bordj Badji Mokhtar
       maxLength: 25,
     },
-    adress: {
+    address: {
       type: String,
       trim: true,
       // required: [true, "order must have an adress"],

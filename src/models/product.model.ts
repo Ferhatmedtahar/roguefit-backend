@@ -39,10 +39,10 @@ const productSchema = new mongoose.Schema(
     },
     usage: {
       type: String,
-      required: [true, "a product must specify the usage"],
     },
     price: {
       type: Number,
+      min: 0,
       required: [true, "a product must have a price"],
     },
     discount: {

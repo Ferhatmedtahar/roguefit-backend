@@ -46,7 +46,8 @@ export const getReview = catchAsync(
 
 export const setIDs = (req: CustomReq, res: Response, next: NextFunction) => {
   if (!req.body.product) req.body.product = req.params.productId;
-  if (!req.body.user) req.body.user = req.user._id;
+  if (!req.body.user) req.body.user = req.user.id;
+  console.log(req.user._id, req.body);
   next();
 };
 

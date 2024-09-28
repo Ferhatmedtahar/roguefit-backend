@@ -20,23 +20,49 @@ import {
   updateUser,
   uploadUserPhoto,
 } from "../controllers/user.controller";
+import { validateRequest } from "../validators/validate";
+import {
+  forgotPasswordSchema,
+  loginSchema,
+  resetPasswordSchema,
+  signUpSchema,
+  updateMeSchema,
+  updatePasswordSchema,
+} from "../validators/user.validator";
 
 const router = express.Router();
 
 // £ login and signup and forget  password functionallity
 
-router.post("/signup", signUp);
-router.post("/login", login);
+router.post("/signup", validateRequest(signUpSchema), signUp);
+router.post("/login", validateRequest(loginSchema), login);
 
-router.post("/forgotPassword", forgotPassword);
-router.patch("/resetPassword/:resetToken", resetPassword);
+router.post(
+  "/forgotPassword",
+  validateRequest(forgotPasswordSchema),
+  forgotPassword
+);
+router.patch(
+  "/resetPassword/:resetToken",
+  validateRequest(resetPasswordSchema),
+  resetPassword
+);
 
 // $ all prev routes doesnt requires login but the rest need so :
 router.use(protect);
 
-router.route("/updatePassword").patch(updatePassword);
+router
+  .route("/updatePassword")
+  .patch(validateRequest(updatePasswordSchema), updatePassword);
 // upload.single("photo")
-router.route("/updateMe").patch(uploadUserPhoto, resizeUserPhoto, updateMe);
+router
+  .route("/updateMe")
+  .patch(
+    validateRequest(updateMeSchema),
+    uploadUserPhoto,
+    resizeUserPhoto,
+    updateMe
+  );
 
 router.route("/deleteMe").delete(deleteMe);
 

@@ -7,6 +7,31 @@ import { catchAsync } from "../utils/catchAsync";
 interface CustomReq extends Request {
   user?: any;
 }
+
+/*
+
+export const getCheckoutSession = catchAsync(
+  async (req: CustomReq, res: Response, next: NextFunction) => {
+    const newCheckout = await client.createCheckout({
+      items: [
+        { price: "PRICE_ID", quantity: 2 },
+        { price: "ANOTHER_PRICE_ID", quantity: 1 },
+      ],
+      success_url: `${req.protocol}://${req.get("host")}/success`,
+      failure_url: `${req.protocol}://${req.get("host")}/failure`,
+      payment_method: "edahabia",
+      customer_id: req.user._id,
+      metadata: { orderId: "123456" },
+      locale: "en",
+      pass_fees_to_customer: false,
+    });
+  }
+);
+
+! Test Mode Base Url: https://pay.chargily.net/test/api/pay-v2
+
+
+*/
 export const getAllOrders = catchAsync(
   async (req: CustomReq, res: Response, next: NextFunction) => {
     const query = new APIFeatures(Order.find(), req.query)
@@ -43,19 +68,28 @@ export const getOrder = catchAsync(
   }
 );
 
+export const setCustomerID = (
+  req: CustomReq,
+  res: Response,
+  next: NextFunction
+) => {
+  if (!req.body.customer) req.body.customer = req.user.id;
+  next();
+};
+
 //  REVIEW create a order
 export const createOrder = catchAsync(
   async (req: CustomReq, res: Response, next: NextFunction) => {
     // £ we dont get the total price but we calculate it
-    const customer = req.user._id;
+
     const {
+      customer,
       customerContact,
       status,
       deliveryType,
       products,
       state,
-      adress,
-      isPaid,
+      address,
     } = req.body;
 
     // $ need to check the products and id and stock for them .
@@ -63,11 +97,10 @@ export const createOrder = catchAsync(
       customer,
       customerContact,
       state,
-      adress,
+      address,
       deliveryType,
       status,
       products,
-      isPaid,
     });
     if (!newOrder) return next(new AppError("order could not be created", 400));
     const selectedOrder = await Order.findById(newOrder._id).select(
@@ -83,25 +116,30 @@ export const createOrder = catchAsync(
 // REVIEW  UPDATE IT SELF
 export const updateOrder = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    const updateObject: any = {};
-    // TODO update the status and paid only , cancel can happend only if the status still processing or pending .
-
+    const { isPaid, status } = req.body;
     const curOrder = await Order.findById(req.params.id);
-    const { isPaid } = req.body;
+    if (!curOrder) return next(new AppError("Order not found", 404));
 
-    // cancel order only when its the proccessing and pending .
-    if (isPaid) {
-      updateObject.isPaid = true; //
-      updateObject.status = "processing"; // Set the status to canceled if `isPaid` is not provided
-    } else {
-      updateObject.status = "canceled"; // Set the status to canceled if `isPaid` is not provided
-    }
-    const order = await Order.findByIdAndUpdate(req.params.id, updateObject, {
-      runValidators: true,
-      new: true,
-    });
-    if (!order) return next(new AppError("order could not be canceled", 404));
-    res.status(200).json({ status: "success", data: order });
+    if (
+      status === "canceled" &&
+      (curOrder?.status === "delivered" || curOrder?.status === "shipped")
+    )
+      return next(
+        new AppError(
+          "can't update the order after its delivered or shipped",
+          400
+        )
+      );
+
+    if (isPaid && curOrder?.isPaid === true)
+      return next(new AppError("can not pay the order twice", 400));
+
+    curOrder.isPaid = isPaid ?? curOrder.isPaid;
+    curOrder.status = status ?? curOrder.status;
+
+    await curOrder.save({ validateBeforeSave: true });
+
+    res.status(200).json({ status: "success", data: curOrder });
   }
 );
 

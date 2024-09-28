@@ -5,20 +5,36 @@ import {
   deleteOrder,
   getAllOrders,
   getOrder,
+  setCustomerID,
   updateOrder,
 } from "../controllers/order.controller";
+import { validateRequest } from "../validators/validate";
+import {
+  createOrderSchema,
+  updateOrderSchema,
+} from "../validators/order.validate";
 
 const router = express.Router();
+router.use(protect);
 
 router
   .route("/")
-  .get(protect, getAllOrders)
-  .post(protect, restrictTO("user", "coach"), createOrder);
+  .get(restrictTO("admin"), getAllOrders)
+  .post(
+    restrictTO("user", "coach"),
+    setCustomerID,
+    validateRequest(createOrderSchema),
+    createOrder
+  );
 
 router
   .route("/:id")
-  .get(protect, getOrder)
-  .patch(protect, restrictTO("user", "coach"), updateOrder)
-  .delete(protect, restrictTO("admin"), deleteOrder);
+  .get(getOrder)
+  .patch(
+    restrictTO("user", "coach"),
+    validateRequest(updateOrderSchema),
+    updateOrder
+  )
+  .delete(restrictTO("admin"), deleteOrder);
 
 export default router;

@@ -138,9 +138,6 @@ export function createUser(req: Request, res: Response, next: NextFunction) {
 
 
 
-
-
-
 */
 // REVIEW UPDATE THE USER DATA:name , email
 
