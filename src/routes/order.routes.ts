@@ -1,6 +1,7 @@
 import express from "express";
 import { protect, restrictTO } from "../controllers/auth.controller";
 import {
+  checkOwnershipOrder,
   createOrder,
   deleteOrder,
   getAllOrders,
@@ -32,6 +33,7 @@ router
   .get(getOrder)
   .patch(
     restrictTO("user", "coach"),
+    checkOwnershipOrder,
     validateRequest(updateOrderSchema),
     updateOrder
   )

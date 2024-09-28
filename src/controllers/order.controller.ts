@@ -8,6 +8,25 @@ interface CustomReq extends Request {
   user?: any;
 }
 
+export const checkOwnershipOrder = catchAsync(
+  async (req: CustomReq, res: Response, next: NextFunction) => {
+    const { id } = req.params; // Order ID from the request params
+    const order = await Order.findById(id);
+
+    if (!order) return next(new AppError("order not found", 404));
+
+    if (
+      order.customer._id.toString() !== req.user.id &&
+      req.user.role !== "admin"
+    ) {
+      return next(
+        new AppError("You are not allowed to update this order", 401)
+      );
+    }
+    next();
+  }
+);
+
 /*
 
 export const getCheckoutSession = catchAsync(
@@ -108,7 +127,7 @@ export const createOrder = catchAsync(
     );
     res.status(201).json({
       status: "success",
-      selectedOrder,
+      order: selectedOrder,
     });
   }
 );

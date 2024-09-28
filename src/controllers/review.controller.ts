@@ -8,6 +8,26 @@ interface CustomReq extends Request {
   user?: any;
 }
 
+export const checkOwnershipReview = catchAsync(
+  async (req: CustomReq, res: Response, next: NextFunction) => {
+    const { reviewId } = req.params;
+
+    const review = await Review.findById(reviewId);
+
+    if (!review) return next(new AppError("review not found", 404));
+
+    if (
+      review.user._id.toString() !== req.user.id &&
+      req.user.role !== "admin"
+    ) {
+      return next(
+        new AppError("You are not allowed to update this order", 401)
+      );
+    }
+    next();
+  }
+);
+
 export const getAllReviews = catchAsync(
   async (req: CustomReq, res: Response, next: NextFunction) => {
     let filter = {};
@@ -47,7 +67,7 @@ export const getReview = catchAsync(
 export const setIDs = (req: CustomReq, res: Response, next: NextFunction) => {
   if (!req.body.product) req.body.product = req.params.productId;
   if (!req.body.user) req.body.user = req.user.id;
-  console.log(req.user._id, req.body);
+
   next();
 };
 

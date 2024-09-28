@@ -28,8 +28,6 @@ export const resizeProductImages = catchAsync(
   async (req: CustomReq, res: Response, next: NextFunction) => {
     if (!req.files) return next();
 
-    console.log(req.files);
-
     req.body.images = [];
     // Ensure req.files is an array
     const files = req.files as Express.Multer.File[];

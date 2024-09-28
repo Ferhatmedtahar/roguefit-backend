@@ -1,6 +1,7 @@
 import express from "express";
 import { protect, restrictTO } from "../controllers/auth.controller";
 import {
+  checkOwnershipReview,
   createReview,
   deleteReview,
   getAllReviews,
@@ -8,11 +9,11 @@ import {
   setIDs,
   updateReview,
 } from "../controllers/review.controller";
-import { validateRequest } from "../validators/validate";
 import {
   createReviewSchema,
   updateReviewSchema,
 } from "../validators/review.validator";
+import { validateRequest } from "../validators/validate";
 
 const router = express.Router({ mergeParams: true });
 router.use(protect);
@@ -30,6 +31,7 @@ router
   .get(getReview)
   .patch(
     restrictTO("user", "admin"),
+    checkOwnershipReview,
     validateRequest(updateReviewSchema),
     updateReview
   )
