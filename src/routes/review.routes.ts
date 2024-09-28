@@ -35,5 +35,5 @@ router
     validateRequest(updateReviewSchema),
     updateReview
   )
-  .delete(restrictTO("user", "admin"), deleteReview);
+  .delete(restrictTO("user", "admin"), checkOwnershipReview, deleteReview);
 export default router;

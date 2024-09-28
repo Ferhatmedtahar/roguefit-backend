@@ -6,6 +6,10 @@ import mongoSanitize from "express-mongo-sanitize";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 import morgan from "morgan";
+//  importing the swagger ui and swagger ui docs
+import swaggerDoc from "swagger-jsdoc";
+import swaggerUi from "swagger-ui-express";
+import { SwaggerOptions } from "./services/swagger";
 
 import { globalErrorHandler } from "./controllers/error.controller";
 import apiRoutes from "./routes/index";
@@ -45,10 +49,17 @@ app.use("/api", limiter);
 app.use(mongoSanitize());
 
 app.use(xss());
+app.use(express.static("src/public"));
 
 app.use("/api/v1", apiRoutes);
 
-//  handle the undefined routes
+//! api docs wwith swagger
+
+const spacs = swaggerDoc(SwaggerOptions);
+
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(spacs));
+
+//  ! handle the undefined routes
 app.all("*", (req, res, next) => {
   next(new AppError(`can't find ${req.originalUrl} on this server`, 404));
 });
