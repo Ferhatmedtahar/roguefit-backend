@@ -1,0 +1,24 @@
+452c9da Stop tracking .env file
+a1e3581 Merge branch 'main' of https://github.com/Ferhatmedtahar/roguefit-backend
+2a7d168 added statistics route and alias route on products
+227c8ff Update .env
+7d51d40 added API-DOCS note:not implemented in details , fix later
+906122d add checkOwnerShip for orders &reviews
+d943cc8 added Joi calidator +fixed some issues
+90e8ec9 email welcome and reset password template and send in production and dev+ env variables setup
+7faa510 added image uploading and processing to the product and user in updating for both and for creation of a product
+2ccfe9b getting correct data && prevent duplicate reviews on same product
+aa936ed populate the data in get request and fix the relations
+eba7107 fix review bugs + adding reviews data to the user owner
+6c5f793 finish authentication and calculate the review for each product and update +fix some bugs
+9e76597 added the update and delete me && send jwt in cookie
+f224ab1 implemented RESET PASSWORD functionallity and sending email and protect route and restrict TO
+27dcda7 implemented protected routes+error handle for JWT expire and validated
+abc6376 added the user model and implement the signup and login with jwt
+359e757 added create , cancel , delete order to controller
+b95a0e7 implemented better product+order schemas and handle creation proccess
+59d884e modify the env and gitignore
+d3d5ee0 implement basic features and error handling
+20dacf9 product schema finished +20%basic setup finished
+76e1364 finished setup
+5427833 initial commit
